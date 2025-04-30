@@ -120,9 +120,16 @@ const {middlewareForAuth } = require('./middlewares/auth')
 //     res.send("user found successfully");
 // })
 
+////////////////-     -------------- Always use try and catch for error handling ---------- //////////////
 
 app.get('/admin/users', middlewareForAuth , (req,res)=>{
     res.send("user found successfully");
+})
+
+
+// at last route write this one route handler in case any of the unknown error occured -- Error handling 
+app.use('/',(err,req,res,next)=>{
+    res.status(500).send("Something went wrong");
 })
 
 app.listen(8000,()=>{
