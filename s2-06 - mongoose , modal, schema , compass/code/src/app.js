@@ -14,7 +14,7 @@ app.post('/signup', async (req, res) => {
         await user.save();
         res.send(user);
     } catch (error) {
-        res.status(400).send("Something went wrong");
+        res.status(400).send("Something went wrong " + error);
     }
 })
 
@@ -61,13 +61,20 @@ app.delete('/deleteUser', async (req, res) => {
 })
 
 // partially replace the field
-app.patch('/patchUpdate', async (req, res) => {
+app.patch('/patchUpdate/:id', async (req, res) => {
+
     try {
+        // validation in controller for ex -- email should not be changed once it has been signed up for this i am handling the validation using this code 
         let updatedData = req.body;
-        let queryObject = await User.findOneAndUpdate({_id : updatedData._id},updatedData,{returnDocument : 'after'});
+        if (Object.keys(updatedData).includes("email")) {
+            throw new Error("Email should be changed");
+        }
+        let userId = req.params?.id;
+        console.log(userId);
+        let queryObject = await User.findOneAndUpdate({ _id: userId }, updatedData, { returnDocument: 'after', runValidators: true });
         res.send(queryObject);
     } catch (error) {
-        res.status(400).send("Something went wrong");
+        res.status(400).send("Something went wrong " + error);
     }
 })
 
@@ -75,7 +82,7 @@ app.patch('/patchUpdate', async (req, res) => {
 app.put('/replaceData', async (req, res) => {
     try {
         let updatedData = req.body;
-        let queryObject = await User.findOneAndReplace({_id : updatedData._id},updatedData,{returnDocument : 'after'});
+        let queryObject = await User.findOneAndReplace({ _id: updatedData._id }, updatedData, { returnDocument: 'after' });
         res.send(queryObject);
     } catch (error) {
         res.status(400).send("Something went wrong");
