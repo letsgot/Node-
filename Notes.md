@@ -7,3 +7,5 @@ difference between json vs js objects
 
 
 -- In Mongoose, data synchronization means keeping your data consistent and valid by using the schema to enforce rules before saving or retrieving data from MongoDB. This ensures that the documents in your database match the expectations defined in your code.
+
+--  // In a Node.js signup controller, the process typically involves three key steps. First, data sanitization is performed to clean incoming user inputs by removing unwanted characters, trimming spaces, and validating formats to prevent injection attacks. Second, password encryption is applied using libraries like bcrypt to securely hash the user's password, ensuring that plain text passwords are never stored. Finally, the sanitized and encrypted data is saved into the database using an ORM like Mongoose. This step involves creating a new user document and persisting it, ensuring all required fields meet schema validation rules for secure and structured storage

@@ -1,18 +1,67 @@
 const express = require('express');
+const bcrypt = require('bcryptjs')
 const app = express();
 const { connectToDB } = require('./config/database');
 const { User } = require('./Model/user');
+const validator = require('validator');
 
 // express.json() parses the incoming JSON payload and converts it into a JavaScript object, which is then assigned to req.body.
 app.use(express.json());
 
 // Now in this we are creating the user with dynamic way get the data from the postman or browser 
 app.post('/signup', async (req, res) => {
-    const newUser = req.body;
+   
+    const { firstName, lastName, email, gender, password, age, mobileNumber } = req.body;
+    if (!firstName || !email || !password || !mobileNumber) {
+        res.status(400).send("Bad request");
+    }
     try {
-        const user = new User(newUser);
+        // to create a hash code for password to save it in a sb 
+        const salt = await bcrypt.genSalt(10);
+        const encryptedPassword = await bcrypt.hash(password, salt);
+        // never send the req.body here directly because never trust req.body 
+        const user = new User({
+            firstName,
+            lastName,
+            email,
+            gender,
+            password: encryptedPassword,
+            age,
+            mobileNumber
+        });
         await user.save();
         res.send(user);
+    } catch (error) {
+        res.status(400).send("Something went wrong " + error);
+    }
+})
+
+app.post('/login', async (req, res) => {
+    try {
+        const { inputValue, password } = req.body;
+        // data sanitization
+        if (!inputValue || !password) {
+            throw new Error("Invalid credential 1");  // never which one is incorrect email/mobile or password     
+        }
+
+        let user = {};
+        if (validator.isEmail(inputValue)) {
+            user = await User.findOne({ email: inputValue });
+        }
+        else if (validator.isMobilePhone(inputValue, 'en-IN')) {
+            user = await User.findOne({ mobileNumber: inputValue });
+        }
+        else {
+            throw new Error("Invalid Credentials 2");
+        }
+
+        const passwordVerify = await bcrypt.compare(password, user?.password);
+        if (passwordVerify) {
+            res.send("Login successful");
+        }
+        else {
+            throw new Error("Invalid credentials");
+        }
     } catch (error) {
         res.status(400).send("Something went wrong " + error);
     }
@@ -120,7 +169,7 @@ connectToDB().then(() => {
     }
 })
     .catch((err) => {
-        console.log("something went wrong");
+        console.log("DB connection failure");
     })
 
 // //database connect before server

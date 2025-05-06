@@ -18,6 +18,7 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        unique: true,
         validate(value) {
             if (!validator.isEmail(value)) {
                 throw new Error("Invalid email");
@@ -50,7 +51,15 @@ const userSchema = mongoose.Schema({
         max: 60
     },
     mobileNumber: {
-        type: Number
+        type: String, 
+        required: true,
+        unique : true,
+        validate: {
+            validator: function (value) {
+                return /^[6-9]\d{9}$/.test(value);
+            },
+            message: "Invalid mobile number"
+        }
     }
 }, { timestamps: true })
 
