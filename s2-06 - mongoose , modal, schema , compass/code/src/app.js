@@ -4,13 +4,18 @@ const app = express();
 const { connectToDB } = require('./config/database');
 const { User } = require('./Model/user');
 const validator = require('validator');
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const { authentication } = require("./middleware/auth")
 
 // express.json() parses the incoming JSON payload and converts it into a JavaScript object, which is then assigned to req.body.
 app.use(express.json());
 
+app.use(cookieParser());
+
 // Now in this we are creating the user with dynamic way get the data from the postman or browser 
 app.post('/signup', async (req, res) => {
-   
+
     const { firstName, lastName, email, gender, password, age, mobileNumber } = req.body;
     if (!firstName || !email || !password || !mobileNumber) {
         res.status(400).send("Bad request");
@@ -55,8 +60,22 @@ app.post('/login', async (req, res) => {
             throw new Error("Invalid Credentials 2");
         }
 
-        const passwordVerify = await bcrypt.compare(password, user?.password);
+        const passwordVerify = user.comparePassword(user?.password);
         if (passwordVerify) {
+            // create a jwt token
+            const token = await user.generateToken();
+
+
+            console.log(token);
+
+
+            // add the token to the cookie and send the response to the server  
+            res.cookie("token", token, {
+                maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+                httpOnly: true,              // Can't be accessed via JS (XSS protection)
+                secure: false,               // Should be true in production (HTTPS only)
+                sameSite: 'Strict'           // Prevents CSRF (use 'Lax' or 'None' as needed)
+            })
             res.send("Login successful");
         }
         else {
@@ -67,8 +86,17 @@ app.post('/login', async (req, res) => {
     }
 })
 
+app.get('/profile', authentication, async (req, res) => {
+    let { user } = req;
+    try {
+        res.send(user);
+    } catch (error) {
+        res.status(400).send("Something went wrong");
+    }
+});
+
 // find one user by its mongooose id
-app.get('/user', async (req, res) => {
+app.get('/user', authentication, async (req, res) => {
     let userId = req.body._id;
     try {
         let userDetails = await User.findById(userId);

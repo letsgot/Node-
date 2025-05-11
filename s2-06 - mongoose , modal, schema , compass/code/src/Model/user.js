@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs')
+const jwt = require("jsonwebtoken")
 // for validation we are using validator npm package 
 // In Mongoose, data synchronization means keeping your data consistent and valid by using the schema to enforce rules before saving or retrieving data from MongoDB. This ensures that the documents in your database match the expectations defined in your code.
 const userSchema = mongoose.Schema({
@@ -51,9 +53,9 @@ const userSchema = mongoose.Schema({
         max: 60
     },
     mobileNumber: {
-        type: String, 
+        type: String,
         required: true,
-        unique : true,
+        unique: true,
         validate: {
             validator: function (value) {
                 return /^[6-9]\d{9}$/.test(value);
@@ -62,6 +64,18 @@ const userSchema = mongoose.Schema({
         }
     }
 }, { timestamps: true })
+
+userSchema.methods.generateToken = async function () {
+    let user = this;
+    let token = await jwt.sign({ _id: user?._id }, "Dev@123Tinder##");
+    return token
+}
+
+userSchema.methods.comparePassword = async function (password) {
+    let user = this;
+    let verify = await bcrypt.compare(password, user?.password);
+    return verify;
+}
 
 const User = mongoose.model('User', userSchema);
 
