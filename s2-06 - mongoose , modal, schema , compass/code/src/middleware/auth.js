@@ -7,7 +7,7 @@ const authentication = async (req, res, next) => {
             throw new Error("Token required");
         }
         let decodedCookies = jwt.verify(token, "Dev@123Tinder##");
-        if (decodedCookies) {
+        if (!decodedCookies) {
             throw new Error("Invalid token");
         }
 
