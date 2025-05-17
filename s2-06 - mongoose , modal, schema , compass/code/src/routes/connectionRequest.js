@@ -52,7 +52,45 @@ connectionRequestRouter.post('/send/:status/:receiverId', authentication, async 
     }
 });
 
+connectionRequestRouter.post('/receive/:status/:requestId', authentication, async (req, res) => {
+    try {
+        // status - accepted or rejected 
+        // only receiverId user logged in and able to change the status
+        // In that connection document requestId should be valid , status of the document only be 'interested' , receiverId should be logged in user 
 
+        const loggedIn = req.user;
+        const { status, requestId } = req.params;
+
+        const allowedStatus = ['accepted', 'rejected'];
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({ message: "Invalid status" });
+        }
+
+        const connectionInstance = await Connection.findOne({
+            status: 'interested',
+            receiverId: loggedIn._id,
+            _id: requestId
+        });
+
+        if (!connectionInstance) {
+            return res.status(404).json({
+                message: "Connection request not found"
+            })
+        }
+
+        connectionInstance.status = status;
+        const data = await connectionInstance.save();
+
+        res.json({
+            message: "Status updated successfully",
+            data
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Error " + error.message
+        })
+    }
+})
 
 module.exports = {
     connectionRequestRouter
