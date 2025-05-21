@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const { authRouter } = require("./routes/auth");
 const { profileRouter } = require("./routes/profile");
 const { connectionRequestRouter } = require('./routes/connectionRequest');
+const { userRouter } = require('./routes/user');
 
 // express.json() parses the incoming JSON payload and converts it into a JavaScript object, which is then assigned to req.body.
 app.use(express.json());
@@ -12,7 +13,8 @@ app.use(cookieParser());
 
 app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
-app.use('/request',connectionRequestRouter)
+app.use('/request', connectionRequestRouter)
+app.use('/user', userRouter)
 
 connectToDB().then(() => {
     try {
