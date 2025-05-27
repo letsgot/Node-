@@ -7,7 +7,7 @@ const validator = require("validator");
 // Now in this we are creating the user with dynamic way get the data from the postman or browser 
 authRouter.post('/signup', async (req, res) => {
 
-    const { firstName, lastName, email, gender, password, age, mobileNumber } = req.body;
+    const { firstName, lastName, email, gender, password, age, mobileNumber, photoUrl } = req.body;
     if (!firstName || !email || !password || !mobileNumber) {
         res.status(400).send("Bad request");
     }
@@ -23,7 +23,8 @@ authRouter.post('/signup', async (req, res) => {
             gender,
             password: encryptedPassword,
             age,
-            mobileNumber
+            mobileNumber,
+            photoUrl
         });
         await user.save();
         res.json({
@@ -57,7 +58,7 @@ authRouter.post('/login', async (req, res) => {
         if (!user) {
             throw new Error("User Not Found");
         }
-        const passwordVerify = user.comparePassword(user?.password);
+        const passwordVerify = await user.comparePassword(password);
         if (passwordVerify) {
             // create a jwt token
             const token = await user.generateToken();
@@ -69,13 +70,19 @@ authRouter.post('/login', async (req, res) => {
                 secure: false,               // Should be true in production (HTTPS only)
                 sameSite: 'Strict'           // Prevents CSRF (use 'Lax' or 'None' as needed)
             })
-            res.send("Login successful");
+
+            res.json({
+                message: "Login successful",
+                user
+            });
         }
         else {
             throw new Error("Invalid credentials");
         }
     } catch (error) {
-        res.status(400).send("Something went wrong " + error);
+        res.status(400).json({
+            message: error.message
+        });
     }
 })
 
